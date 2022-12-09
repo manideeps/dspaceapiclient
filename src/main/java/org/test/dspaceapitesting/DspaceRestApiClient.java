@@ -1,5 +1,11 @@
 package org.test.dspaceapitesting;
 
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.TrustStrategy;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -58,10 +64,10 @@ public class DspaceRestApiClient {
     }
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         String dspaceServer = ""; // Replace with ur dspace server
-        DspaceRestApiClient dspaceRestApiClient = new DspaceRestApiClient(new RestTemplate(), dspaceServer);
+        DspaceRestApiClient dspaceRestApiClient = new DspaceRestApiClient(restTemplate(), dspaceServer);
         String token = dspaceRestApiClient.doAuthAndGetToken("--Replace with login email--", "-- Replace with your password");
         String fileId = "Replace url file Id";
         String fileNameToSave = "--Replace with Full filepath to save";
@@ -78,6 +84,28 @@ public class DspaceRestApiClient {
         }
 
     }
+
+    	public static RestTemplate restTemplate() throws Exception {
+    		TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
+ 
+    		SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
+                    		.loadTrustMaterial(null, acceptingTrustStrategy)
+                    		.build();
+ 
+    		SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
+ 
+    		CloseableHttpClient httpClient = HttpClients.custom()
+                    		.setSSLSocketFactory(csf)
+                    		.build();
+ 
+    		HttpComponentsClientHttpRequestFactory requestFactory =
+                    		new HttpComponentsClientHttpRequestFactory();
+ 
+    		requestFactory.setHttpClient(httpClient);
+    		RestTemplate restTemplate = new RestTemplate(requestFactory);
+   		return restTemplate;
+ 	}
+
 
 
 }
